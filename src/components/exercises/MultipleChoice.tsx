@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MultipleChoiceExercise } from '@/data/courses';
-import { Colors, UI_FONT } from '@/theme';
+import { Colors, UI_FONT, MONO } from '@/theme';
+import { RichCodeText } from '@/components/ui/RichCodeText';
 import { OptionGrid } from './OptionGrid';
 import { ExerciseSelectionState } from './CodeBlocks';
 
@@ -13,10 +14,13 @@ interface Props {
 
 export function MultipleChoice({ exercise, locked, onSelectionChange }: Props) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [activeExercise, setActiveExercise] = useState(exercise);
 
-  useEffect(() => {
+  // Reset selection when the parent swaps exercises (derived during render).
+  if (activeExercise !== exercise) {
+    setActiveExercise(exercise);
     setSelectedIndex(null);
-  }, [exercise]);
+  }
 
   useEffect(() => {
     onSelectionChange({
@@ -29,7 +33,7 @@ export function MultipleChoice({ exercise, locked, onSelectionChange }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.kicker}>SELECT THE CORRECT ANSWER</Text>
-      <Text style={styles.question}>{exercise.question}</Text>
+      <RichCodeText text={exercise.question} style={styles.question} />
 
       <OptionGrid
         options={exercise.options}
@@ -44,20 +48,21 @@ export function MultipleChoice({ exercise, locked, onSelectionChange }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    gap: 16,
+    gap: 12,
   },
   kicker: {
-    fontFamily: UI_FONT,
-    fontSize: 12,
-    fontWeight: '800',
-    color: Colors.textSecondary,
-    letterSpacing: 1,
+    fontFamily: MONO,
+    fontSize: 9.5,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    letterSpacing: 0.9,
   },
   question: {
     fontFamily: UI_FONT,
-    fontSize: 21,
-    fontWeight: '800',
-    color: Colors.white,
-    lineHeight: 28,
+    fontSize: 17,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    lineHeight: 23,
+    letterSpacing: -0.3,
   },
 });

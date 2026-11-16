@@ -14,9 +14,9 @@ export function IDEWindow({ title = 'script.py', lines, children }: IDEWindowPro
     <View style={styles.window}>
       <View style={styles.titleBar}>
         <View style={styles.dots}>
-          <View style={[styles.dot, { backgroundColor: Colors.red }]} />
-          <View style={[styles.dot, { backgroundColor: Colors.gold }]} />
-          <View style={[styles.dot, { backgroundColor: Colors.green }]} />
+          <View style={styles.dot} />
+          <View style={styles.dot} />
+          <View style={styles.dot} />
         </View>
         <Text style={styles.filename}>{title}</Text>
         <View style={styles.spacer} />
@@ -28,7 +28,7 @@ export function IDEWindow({ title = 'script.py', lines, children }: IDEWindowPro
               <View key={i} style={styles.lineRow}>
                 <Text style={styles.lineNo}>{i + 1}</Text>
                 <View style={styles.lineCode}>
-                  <CodeLine code={line} />
+                  <CodeLine code={line} fontSize={12.5} lineHeight={20} />
                 </View>
               </View>
             ))
@@ -40,58 +40,59 @@ export function IDEWindow({ title = 'script.py', lines, children }: IDEWindowPro
 
 const styles = StyleSheet.create({
   window: {
-    backgroundColor: Colors.ideBg,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: Colors.border,
+    backgroundColor: Colors.terminal,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.hairline,
     overflow: 'hidden',
   },
   titleBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: Colors.card,
-    borderBottomWidth: 2,
-    borderBottomColor: Colors.border,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.hairline,
   },
   dots: {
     flexDirection: 'row',
-    gap: 6,
-    width: 48,
+    gap: 4,
+    width: 30,
   },
   dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#3F3F46',
   },
   filename: {
     fontFamily: MONO,
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.textSecondary,
+    fontSize: 10,
+    fontWeight: '500',
+    letterSpacing: -0.1,
+    color: Colors.textMuted,
   },
   spacer: {
-    width: 48,
+    width: 30,
   },
   body: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    gap: 4,
   },
   lineRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
-    paddingVertical: 2,
+    gap: 10,
   },
   lineNo: {
-    width: 20,
+    width: 16,
     textAlign: 'right',
     fontFamily: MONO,
-    fontSize: 13,
-    color: Colors.textDisabled,
+    fontSize: 11,
+    color: '#3F3F46',
     lineHeight: 20,
   },
   lineCode: {

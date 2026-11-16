@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors, UI_FONT, MONO } from '@/theme';
-import { Tactile3DBox } from '@/components/Tactile3D';
+import { SpringPressable } from '@/components/CyberButton';
 
 interface OptionGridProps {
   options: readonly string[];
@@ -26,51 +26,71 @@ export function OptionGrid({
         const isSelected = selectedIndex === idx;
         const isCorrect = idx === correctIndex;
 
-        let borderColor: string = Colors.border;
-        let lipColor: string = Colors.cardLip;
-        let bgColor: string = Colors.card;
-        let badgeBg: string = Colors.bg;
+        let borderColor: string = Colors.hairline;
+        let bgColor: string = Colors.control;
+        let badgeBg: string = Colors.controlActive;
+        let badgeBorder: string = Colors.hairline;
         let badgeText: string = Colors.textSecondary;
+        let textColor: string = Colors.textPrimary;
 
         if (locked) {
           if (isCorrect) {
-            borderColor = Colors.green;
-            lipColor = Colors.greenLip;
+            borderColor = Colors.greenBannerBorder;
             bgColor = Colors.greenBannerBg;
-            badgeBg = Colors.green;
-            badgeText = Colors.white;
+            badgeBg = Colors.success;
+            badgeBorder = Colors.success;
+            badgeText = '#0A0A0C';
+            textColor = Colors.textPrimary;
           } else if (isSelected && !isCorrect) {
-            borderColor = Colors.red;
-            lipColor = Colors.redLip;
+            borderColor = Colors.redBannerBorder;
             bgColor = Colors.redBannerBg;
-            badgeBg = Colors.red;
-            badgeText = Colors.white;
+            badgeBg = Colors.danger;
+            badgeBorder = Colors.danger;
+            badgeText = '#0A0A0C';
+            textColor = Colors.textPrimary;
           }
         } else if (isSelected) {
-          borderColor = Colors.violet;
-          lipColor = Colors.violetLip;
-          bgColor = Colors.violetTint;
-          badgeBg = Colors.violet;
-          badgeText = Colors.white;
+          borderColor = Colors.hairlineStrong;
+          bgColor = Colors.controlActive;
+          badgeBg = Colors.accent;
+          badgeBorder = 'rgba(255, 255, 255, 0.16)';
+          badgeText = '#FFFFFF';
         }
 
         return (
-          <Tactile3DBox
+          <SpringPressable
             key={idx}
-            depth={5}
-            borderRadius={16}
-            faceColor={bgColor}
-            lipColor={lipColor}
-            borderColor={borderColor}
             disabled={locked}
+            haptic="selection"
+            pressScale={0.98}
             onPress={() => onSelect(idx)}
-            faceStyle={styles.cardFace}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isSelected, disabled: locked }}
+            style={[
+              styles.card,
+              { backgroundColor: bgColor, borderColor },
+            ]}
           >
-            <View style={[styles.indexBadge, { backgroundColor: badgeBg, borderColor }]}>
-              <Text style={[styles.indexText, { color: badgeText }]}>{idx + 1}</Text>
+            <View
+              style={[
+                styles.indexBadge,
+                { backgroundColor: badgeBg, borderColor: badgeBorder },
+              ]}
+            >
+              <Text style={[styles.indexText, { color: badgeText }]}>
+                {idx + 1}
+              </Text>
             </View>
-            <Text style={[styles.optionText, monospace && styles.monoText]}>{opt}</Text>
-          </Tactile3DBox>
+            <Text
+              style={[
+                styles.optionText,
+                { color: textColor },
+                monospace && styles.monoText,
+              ]}
+            >
+              {opt}
+            </Text>
+          </SpringPressable>
         );
       })}
     </View>
@@ -79,37 +99,45 @@ export function OptionGrid({
 
 const styles = StyleSheet.create({
   list: {
-    gap: 12,
+    gap: 9,
   },
-  cardFace: {
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    padding: 15,
+    gap: 12,
+    minHeight: 52,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 20,
+    borderCurve: 'continuous',
+    borderWidth: 1.5,
+    borderBottomWidth: 3,
+    borderBottomColor: '#0C0B14',
   },
   indexBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 9,
-    borderWidth: 2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   indexText: {
     fontFamily: MONO,
-    fontSize: 13,
-    fontWeight: '800',
+    fontSize: 10.5,
+    fontWeight: '600',
+    letterSpacing: -0.2,
   },
   optionText: {
     flex: 1,
     fontFamily: UI_FONT,
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.white,
-    lineHeight: 22,
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
   },
   monoText: {
     fontFamily: MONO,
-    fontSize: 15,
+    fontSize: 12.5,
+    letterSpacing: -0.1,
   },
 });

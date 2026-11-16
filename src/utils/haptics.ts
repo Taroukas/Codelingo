@@ -1,12 +1,29 @@
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
-const enabled = Platform.OS !== 'web';
+let enabled = Platform.OS !== 'web';
+
+/** Lets the Profile preferences switch turn device haptics on or off. */
+export function setHapticsEnabled(value: boolean): void {
+  enabled = value && Platform.OS !== 'web';
+}
 
 /** Light impact feedback on every tap. */
 export function tapHaptic(): void {
   if (!enabled) return;
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+}
+
+/** Medium impact for primary actions such as running code. */
+export function mediumHaptic(): void {
+  if (!enabled) return;
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
+}
+
+/** Selection tick for segmented controls and tab switches. */
+export function selectionHaptic(): void {
+  if (!enabled) return;
+  Haptics.selectionAsync().catch(() => undefined);
 }
 
 /** Success notification on a correct answer. */

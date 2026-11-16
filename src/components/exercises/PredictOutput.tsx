@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { PredictOutputExercise } from '@/data/courses';
 import { Colors, UI_FONT, MONO } from '@/theme';
 import { IDEWindow } from '@/components/IDEWindow';
+import { RichCodeText } from '@/components/ui/RichCodeText';
 import { OptionGrid } from './OptionGrid';
 import { ExerciseSelectionState } from './CodeBlocks';
 
@@ -15,10 +16,13 @@ interface Props {
 
 export function PredictOutput({ exercise, fileExt = 'py', locked, onSelectionChange }: Props) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [activeExercise, setActiveExercise] = useState(exercise);
 
-  useEffect(() => {
+  // Reset selection when the parent swaps exercises (derived during render).
+  if (activeExercise !== exercise) {
+    setActiveExercise(exercise);
     setSelectedIndex(null);
-  }, [exercise]);
+  }
 
   useEffect(() => {
     onSelectionChange({
@@ -31,7 +35,7 @@ export function PredictOutput({ exercise, fileExt = 'py', locked, onSelectionCha
   return (
     <View style={styles.container}>
       <Text style={styles.kicker}>PREDICT THE OUTPUT</Text>
-      <Text style={styles.prompt}>{exercise.prompt}</Text>
+      <RichCodeText text={exercise.prompt} style={styles.prompt} />
 
       <IDEWindow title={`main.${fileExt}`} lines={exercise.code} />
 
@@ -58,38 +62,40 @@ export function PredictOutput({ exercise, fileExt = 'py', locked, onSelectionCha
 
 const styles = StyleSheet.create({
   container: {
-    gap: 14,
+    gap: 12,
   },
   kicker: {
-    fontFamily: UI_FONT,
-    fontSize: 12,
-    fontWeight: '800',
-    color: Colors.textSecondary,
-    letterSpacing: 1,
+    fontFamily: MONO,
+    fontSize: 9.5,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    letterSpacing: 0.9,
   },
   prompt: {
     fontFamily: UI_FONT,
-    fontSize: 21,
-    fontWeight: '800',
-    color: Colors.white,
-    lineHeight: 28,
+    fontSize: 17,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    lineHeight: 23,
+    letterSpacing: -0.3,
   },
   terminalPreview: {
-    backgroundColor: Colors.ideBg,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.border,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    backgroundColor: Colors.terminal,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.hairline,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
   },
   terminalPrompt: {
     fontFamily: MONO,
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.textSecondary,
+    fontSize: 11.5,
+    fontWeight: '500',
+    color: Colors.textMuted,
+    letterSpacing: -0.1,
   },
   terminalAnswer: {
-    color: Colors.green,
-    fontWeight: '800',
+    color: Colors.success,
+    fontWeight: '600',
   },
 });

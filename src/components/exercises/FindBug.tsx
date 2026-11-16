@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { FindBugExercise } from '@/data/courses';
 import { Colors, UI_FONT, MONO } from '@/theme';
 import { CodeLine } from '@/components/CodeLine';
+import { SpringPressable } from '@/components/CyberButton';
+import { RichCodeText } from '@/components/ui/RichCodeText';
 import { tapHaptic } from '@/utils/haptics';
+import { playSound } from '@/utils/sounds';
 import { ExerciseSelectionState } from './CodeBlocks';
 
 interface Props {
@@ -23,10 +26,13 @@ export function FindBug({
   onImmediateLineTap,
 }: Props) {
   const [selectedLine, setSelectedLine] = useState<number | null>(null);
+  const [activeExercise, setActiveExercise] = useState(exercise);
 
-  useEffect(() => {
+  // Reset selection when the parent swaps exercises (derived during render).
+  if (activeExercise !== exercise) {
+    setActiveExercise(exercise);
     setSelectedLine(null);
-  }, [exercise]);
+  }
 
   useEffect(() => {
     if (!onSelectionChange) return;
@@ -40,6 +46,9 @@ export function FindBug({
   const handleSelectLine = (idx: number) => {
     if (locked) return;
     tapHaptic();
+    if (!onImmediateLineTap) {
+      playSound('select');
+    }
     setSelectedLine(idx);
     if (onImmediateLineTap) {
       onImmediateLineTap(idx, idx === exercise.bugLine);
@@ -49,14 +58,14 @@ export function FindBug({
   return (
     <View style={styles.container}>
       <Text style={styles.kicker}>SPOT THE BUG</Text>
-      <Text style={styles.prompt}>{exercise.prompt}</Text>
+      <RichCodeText text={exercise.prompt} style={styles.prompt} />
 
       <View style={styles.ideWindow}>
         <View style={styles.ideTitleBar}>
           <View style={styles.dots}>
-            <View style={[styles.dot, { backgroundColor: Colors.red }]} />
-            <View style={[styles.dot, { backgroundColor: Colors.gold }]} />
-            <View style={[styles.dot, { backgroundColor: Colors.green }]} />
+            <View style={styles.dot} />
+            <View style={styles.dot} />
+            <View style={styles.dot} />
           </View>
           <Text style={styles.filename}>{`snippet.${fileExt}`}</Text>
           <View style={styles.spacer} />
@@ -72,50 +81,37 @@ export function FindBug({
 
             if (locked) {
               if (isBugLine) {
-                borderColor = Colors.green;
+                borderColor = Colors.greenBannerBorder;
                 bgColor = Colors.greenBannerBg;
               } else if (isSelected && !isBugLine) {
-                borderColor = Colors.red;
+                borderColor = Colors.redBannerBorder;
                 bgColor = Colors.redBannerBg;
               }
             } else if (isSelected) {
-              borderColor = Colors.violet;
-              bgColor = Colors.violetTint;
+              borderColor = Colors.hairlineStrong;
+              bgColor = Colors.controlActive;
             }
 
             return (
-              <Pressable
+              <SpringPressable
                 key={idx}
                 disabled={locked}
+                haptic="none"
+                pressScale={0.985}
                 onPress={() => handleSelectLine(idx)}
-                style={({ pressed }) => [
+                style={[
                   styles.codeRow,
                   { borderColor, backgroundColor: bgColor },
-                  pressed && !locked && { opacity: 0.85 },
                 ]}
               >
-                <View
-                  style={[
-                    styles.lineBadge,
-                    isSelected && !locked && { backgroundColor: Colors.violet },
-                    locked && isBugLine && { backgroundColor: Colors.green },
-                    locked && isSelected && !isBugLine && { backgroundColor: Colors.red },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.lineNumber,
-                      (isSelected || (locked && isBugLine)) && { color: Colors.white },
-                    ]}
-                  >
-                    {idx + 1}
-                  </Text>
+                <View style={styles.lineBadge}>
+                  <Text style={styles.lineNumber}>{idx + 1}</Text>
                 </View>
 
                 <View style={styles.codeContent}>
-                  <CodeLine code={line} fontSize={14} />
+                  <CodeLine code={line} fontSize={12.5} lineHeight={20} />
                 </View>
-              </Pressable>
+              </SpringPressable>
             );
           })}
         </View>
@@ -128,92 +124,93 @@ export function FindBug({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 16,
+    gap: 12,
   },
   kicker: {
-    fontFamily: UI_FONT,
-    fontSize: 12,
-    fontWeight: '800',
-    color: Colors.textSecondary,
-    letterSpacing: 1,
+    fontFamily: MONO,
+    fontSize: 9.5,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    letterSpacing: 0.9,
   },
   prompt: {
     fontFamily: UI_FONT,
-    fontSize: 21,
-    fontWeight: '800',
-    color: Colors.white,
-    lineHeight: 28,
+    fontSize: 17,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    lineHeight: 23,
+    letterSpacing: -0.3,
   },
   ideWindow: {
-    backgroundColor: Colors.ideBg,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: Colors.border,
+    backgroundColor: Colors.terminal,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.hairline,
     overflow: 'hidden',
   },
   ideTitleBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: Colors.card,
-    borderBottomWidth: 2,
-    borderBottomColor: Colors.border,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.hairline,
   },
   dots: {
     flexDirection: 'row',
-    gap: 6,
-    width: 48,
+    gap: 4,
+    width: 32,
   },
   dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#3F3F46',
   },
   filename: {
     fontFamily: MONO,
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.textSecondary,
+    fontSize: 10,
+    fontWeight: '500',
+    color: Colors.textMuted,
+    letterSpacing: -0.1,
   },
   spacer: {
-    width: 48,
+    width: 32,
   },
   linesContainer: {
-    padding: 10,
-    gap: 8,
+    padding: 6,
+    gap: 2,
   },
   codeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    borderWidth: 2,
+    gap: 10,
+    paddingVertical: 7,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    borderWidth: 1,
   },
   lineBadge: {
-    width: 26,
-    height: 26,
-    borderRadius: 8,
-    backgroundColor: Colors.card,
+    width: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   lineNumber: {
     fontFamily: MONO,
-    fontSize: 12,
-    fontWeight: '800',
-    color: Colors.textSecondary,
+    fontSize: 10.5,
+    fontWeight: '500',
+    color: '#3F3F46',
+    letterSpacing: -0.2,
   },
   codeContent: {
     flex: 1,
   },
   helperText: {
     fontFamily: UI_FONT,
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '400',
+    color: Colors.textMuted,
   },
 });

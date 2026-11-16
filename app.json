@@ -1,18 +1,27 @@
 {
   "expo": {
-    "name": "code-lingo",
-    "slug": "code-lingo",
+    "name": "Codelingo",
+    "slug": "codelingo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "codelingo",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B0D12",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "bundleIdentifier": "com.tarek.codelingo",
+      "supportsTablet": false,
+      "usesAppleSignIn": true,
+      "backgroundColor": "#0B0D12",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.tarek.codelingo",
+      "backgroundColor": "#0B0D12",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0B0D12",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -28,11 +37,34 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#0B0D12",
+          "image": "./assets/images/splash.png",
+          "imageWidth": 280,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#0B0D12",
+            "image": "./assets/images/splash.png"
+          }
         }
-      ]
+      ],
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": false,
+          "enableBackgroundRecording": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#7C5CFC",
+          "defaultChannel": "codelingo-reminders",
+          "enableRemoteNotifications": false
+        }
+      ],
+      "expo-apple-authentication",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,7 +1,80 @@
 import React from 'react';
-import { Text, StyleSheet, ViewStyle, TextStyle, View } from 'react-native';
+import {
+  PressableProps,
+  Text,
+  StyleSheet,
+  View,
+  ViewStyle,
+  TextStyle,
+  StyleProp,
+} from 'react-native';
 import { Colors, UI_FONT } from '@/theme';
-import { Tactile3DBox } from './Tactile3D';
+import { JigglePressable } from '@/components/ui/JigglePressable';
+import { type SoundCue } from '@/utils/sounds';
+
+export interface SpringPressableProps extends Omit<PressableProps, 'style'> {
+  style?: StyleProp<ViewStyle>;
+  pressScale?: number;
+  pressTranslateY?: number;
+  pressOpacity?: number;
+  haptic?: 'light' | 'medium' | 'selection' | 'none';
+  sound?: SoundCue | 'auto' | 'none';
+  children?: React.ReactNode;
+}
+
+export type TactilePressableProps = SpringPressableProps;
+
+/**
+ * Reusable spring-driven interactive wrapper implementing:
+ * - Native driver (`useNativeDriver: true`)
+ * - Strict `.stopAnimation()` before every touch gesture
+ * - Press-in keycap compression (`scale` + `translateY` 3D press)
+ * - Press-out micro-bounce
+ * - Instant native haptic feedback
+ */
+export function SpringPressable({
+  style,
+  pressScale = 0.94,
+  pressTranslateY = 3,
+  pressOpacity = 0.94,
+  haptic = 'light',
+  sound = 'auto',
+  disabled,
+  children,
+  ...rest
+}: SpringPressableProps) {
+  const resolvedSound: SoundCue | 'none' =
+    sound === 'none'
+      ? 'none'
+      : sound !== 'auto'
+      ? sound
+      : haptic === 'light'
+      ? 'tap'
+      : haptic === 'selection' || haptic === 'medium'
+      ? 'select'
+      : 'none';
+
+  const targetScaleY = pressScale < 1 ? Math.min(pressScale, 0.94) : 0.92;
+  const targetScaleX = 1 + Math.max(0.025, (1 - targetScaleY) * 0.55);
+
+  return (
+    <JigglePressable
+      {...rest}
+      disabled={disabled}
+      haptic={haptic}
+      sound={resolvedSound}
+      pressScaleX={targetScaleX}
+      pressScaleY={targetScaleY}
+      pressTranslateY={pressTranslateY}
+      pressOpacity={pressOpacity}
+      style={style}
+    >
+      {children}
+    </JigglePressable>
+  );
+}
+
+export const TactilePressable = SpringPressable;
 
 export type ButtonVariant =
   | 'violet'
@@ -21,30 +94,56 @@ interface DuolingoButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   icon?: React.ReactNode;
+  /** Legacy 3D-lip height. Accepted for compatibility and ignored. */
   lipHeight?: number;
 }
 
+/**
+ * Flat Linear-style action button with organic spring compression & haptics.
+ */
 const VARIANT_PALETTE: Record<
   ButtonVariant,
-  { bg: string; lip: string; text: string; borderColor?: string }
+  { bg: string; text: string; borderColor: string }
 > = {
-  violet: { bg: Colors.violet, lip: Colors.violetLip, text: Colors.white },
-  green: { bg: Colors.green, lip: Colors.greenLip, text: Colors.white },
-  red: { bg: Colors.red, lip: Colors.redLip, text: Colors.white },
-  sky: { bg: Colors.sky, lip: Colors.skyLip, text: Colors.white },
-  emerald: { bg: Colors.emerald, lip: Colors.emeraldLip, text: Colors.white },
-  white: { bg: Colors.white, lip: Colors.whiteLip, text: Colors.bg },
+  violet: {
+    bg: Colors.accent,
+    text: '#FFFFFF',
+    borderColor: 'rgba(255, 255, 255, 0.16)',
+  },
+  green: {
+    bg: Colors.success,
+    text: '#0A0A0C',
+    borderColor: 'rgba(255, 255, 255, 0.16)',
+  },
+  red: {
+    bg: Colors.danger,
+    text: '#0A0A0C',
+    borderColor: 'rgba(255, 255, 255, 0.16)',
+  },
+  sky: {
+    bg: Colors.accent,
+    text: '#FFFFFF',
+    borderColor: 'rgba(255, 255, 255, 0.16)',
+  },
+  emerald: {
+    bg: Colors.success,
+    text: '#0A0A0C',
+    borderColor: 'rgba(255, 255, 255, 0.16)',
+  },
+  white: {
+    bg: Colors.textPrimary,
+    text: Colors.canvas,
+    borderColor: 'rgba(0, 0, 0, 0.12)',
+  },
   outline: {
-    bg: Colors.card,
-    lip: Colors.cardLip,
-    text: Colors.white,
-    borderColor: Colors.border,
+    bg: Colors.control,
+    text: Colors.textPrimary,
+    borderColor: Colors.hairline,
   },
   disabled: {
-    bg: Colors.card,
-    lip: Colors.card,
+    bg: Colors.control,
     text: Colors.textDisabled,
-    borderColor: Colors.card,
+    borderColor: Colors.hairline,
   },
 };
 
@@ -56,51 +155,64 @@ export function DuolingoButton({
   style,
   textStyle,
   icon,
-  lipHeight = 5,
 }: DuolingoButtonProps) {
-  const effectiveVariant: ButtonVariant = disabled ? 'disabled' : variant;
-  const palette = VARIANT_PALETTE[effectiveVariant];
+  const palette = VARIANT_PALETTE[disabled ? 'disabled' : variant];
 
   return (
-    <Tactile3DBox
+    <SpringPressable
       onPress={onPress}
       disabled={disabled}
-      faceColor={palette.bg}
-      lipColor={palette.lip}
-      borderColor={palette.borderColor ?? palette.lip}
-      depth={disabled ? 0 : lipHeight}
-      borderRadius={16}
-      style={style}
-      faceStyle={styles.face}
+      haptic="medium"
+      pressScale={0.97}
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      style={[
+        styles.button,
+        {
+          backgroundColor: palette.bg,
+          borderColor: palette.borderColor,
+        },
+        style,
+      ]}
     >
       <View style={styles.inner}>
         {icon}
-        <Text style={[styles.label, { color: palette.text }, textStyle]}>{label}</Text>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.85}
+          style={[styles.label, { color: palette.text }, textStyle]}
+        >
+          {label}
+        </Text>
       </View>
-    </Tactile3DBox>
+    </SpringPressable>
   );
 }
 
 export const CyberButton = DuolingoButton;
 
 const styles = StyleSheet.create({
-  face: {
-    height: 52,
+  button: {
+    height: 46,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderBottomWidth: 4,
+    borderBottomColor: '#5639D6',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
   },
   inner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
   },
   label: {
     fontFamily: UI_FONT,
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
 });

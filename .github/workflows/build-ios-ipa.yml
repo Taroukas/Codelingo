@@ -1,0 +1,70 @@
+name: Build Unsigned iOS IPA
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-ios-ipa:
+    name: Build Unsigned Codelingo IPA
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Prebuild native iOS project
+        env:
+          CI: '1'
+        run: npx expo prebuild --platform ios --clean
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
+
+      - name: Build unsigned Release xcarchive
+        env:
+          CI: '1'
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_PISTON_URL: ${{ secrets.EXPO_PUBLIC_PISTON_URL }}
+          EXPO_PUBLIC_AI_API_KEY: ${{ secrets.EXPO_PUBLIC_AI_API_KEY }}
+          EXPO_PUBLIC_AI_BASE_URL: ${{ secrets.EXPO_PUBLIC_AI_BASE_URL }}
+        run: |
+          xcodebuild -workspace ios/*.xcworkspace \
+            -scheme Codelingo \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -archivePath "$RUNNER_TEMP/Codelingo.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            archive
+
+      - name: Package .app into unsigned .ipa
+        run: |
+          mkdir -p "$RUNNER_TEMP/Payload"
+          cp -r "$RUNNER_TEMP/Codelingo.xcarchive/Products/Applications/"*.app "$RUNNER_TEMP/Payload/"
+          cd "$RUNNER_TEMP"
+          zip -r -y Codelingo.ipa Payload
+
+      - name: Upload Codelingo-iOS-IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Codelingo-iOS-IPA
+          path: ${{ runner.temp }}/Codelingo.ipa
+          if-no-files-found: error
